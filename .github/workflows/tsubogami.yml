@@ -26,6 +26,14 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q fonts-noto-cjk
+                  # PCと同じ BIZ UDPゴシック を入れる（Google Fonts の公式配布元から）
+          mkdir -p ~/.local/share/fonts
+          for w in Regular Bold; do
+            curl -sSfL -o ~/.local/share/fonts/BIZUDPGothic-$w.ttf \
+              "https://raw.githubusercontent.com/google/fonts/main/ofl/bizudpgothic/BIZUDPGothic-$w.ttf"
+          done
+          fc-cache -f
+          fc-list | grep -i "BIZ UDP"
 
       - uses: actions/setup-node@v4
         with:
