@@ -1,0 +1,79 @@
+name: tsubogami PDF
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 毎日 09:00 JST（= 00:00 UTC）
+  workflow_dispatch:       # 手動実行（テスト用）
+
+permissions:
+  contents: write
+  actions: write           # 60日ルールで定時実行が止まらないようにするため
+
+concurrency:
+  group: tsubogami-pdf
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 日本語フォントを入れる
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q fonts-noto-cjk
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 必要なライブラリを入れる
+        run: npm install --no-audit --no-fund
+
+      - name: これまでのPDFを取得（pdf ブランチ）
+        run: |
+          git clone -q --depth 1 --branch pdf \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" out \
+            || mkdir -p out
+
+      - name: PDFを作る
+        env:
+          TSUBOY_URL: ${{ secrets.TSUBOY_URL }}
+          WAIT_MS: ${{ vars.WAIT_MS }}   # 未設定なら8秒待つ
+        run: node make-pdf.mjs out
+
+      - name: pdf ブランチに保存（履歴は残さず常に最新1コミット）
+        run: |
+          cd out
+          rm -rf .git
+          touch .nojekyll
+          git init -q -b pdf
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "PDF $(TZ=Asia/Tokyo date +%Y-%m-%d)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pdf
+
+      - name: 定時実行が自動停止されないようにする
+        run: gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/tsubogami.yml/enable" || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
