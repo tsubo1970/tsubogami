@@ -1,0 +1,9 @@
+{
+  "name": "tsubogami-pdf",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^24.0.0"
+  }
+}
