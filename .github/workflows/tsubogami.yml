@@ -2,7 +2,8 @@ name: tsubogami PDF
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # 毎日 09:00 JST（= 00:00 UTC）
+    - cron: '31 23 * * *'   # 毎日 09:00 JST（= 00:00 UTC）
+    - cron: '3 1 * * *'
   workflow_dispatch:       # 手動実行（テスト用）
 
 permissions:
