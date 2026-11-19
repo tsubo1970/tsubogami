@@ -17,7 +17,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: 日本語フォントを入れる
         run: |
@@ -32,9 +32,9 @@ jobs:
           fc-cache -f
           fc-list | grep -i "BIZ UDP"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
 
       - name: 必要なライブラリを入れる
         run: npm install --no-audit --no-fund
@@ -63,7 +63,7 @@ jobs:
           git commit -q -m "PDF $(TZ=Asia/Tokyo date +%Y-%m-%d)"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pdf
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: out
 
@@ -78,4 +78,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
