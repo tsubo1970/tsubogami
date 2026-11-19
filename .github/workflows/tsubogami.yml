@@ -1,14 +1,10 @@
 name: tsubogami PDF
 
 on:
-  schedule:
-    - cron: '31 23 * * *'   # 毎日 09:00 JST（= 00:00 UTC）
-    - cron: '3 1 * * *'
-  workflow_dispatch:       # 手動実行（テスト用）
+  workflow_dispatch:       # Home Assistant または手動で実行
 
 permissions:
   contents: write
-  actions: write           # 60日ルールで定時実行が止まらないようにするため
 
 concurrency:
   group: tsubogami-pdf
@@ -27,7 +23,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q fonts-noto-cjk
-                  # PCと同じ BIZ UDPゴシック を入れる（Google Fonts の公式配布元から）
+          # PCと同じ BIZ UDPゴシック を入れる（Google Fonts の公式配布元から）
           mkdir -p ~/.local/share/fonts
           for w in Regular Bold; do
             curl -sSfL -o ~/.local/share/fonts/BIZUDPGothic-$w.ttf \
@@ -66,9 +62,6 @@ jobs:
           git add -A
           git commit -q -m "PDF $(TZ=Asia/Tokyo date +%Y-%m-%d)"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" pdf
-
-      - name: 定時実行が自動停止されないようにする
-        run: gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/tsubogami.yml/enable" || true
 
       - uses: actions/upload-pages-artifact@v3
         with:
